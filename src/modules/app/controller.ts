@@ -34,7 +34,6 @@ class AppController {
   ): Promise<any> {
     try {
       const jsonArray = await csv().fromString(file.buffer.toString());
-      //
       const filterRecord = this.appService.filteredData(jsonArray);
       const res = await this.appService.createRecord(filterRecord);
       if (res) {
