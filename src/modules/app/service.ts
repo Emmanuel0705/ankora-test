@@ -1,74 +1,82 @@
 import { Injectable } from '@nestjs/common';
 import PrismaService from '@services/prisma';
-import { Record } from '@prisma/client';
+import { Kyc, Node, VerificationService } from '@prisma/client';
 import { v4 as uuid } from 'uuid';
-
-type RecordCreateInput = {
-  documentId: string;
-  title: string;
-  url: string;
-  isPaid: boolean;
-  price: string;
-  numSubscribers: number;
-  numReviews: number;
-  numPublishedLectures: number;
-  instructionalLevel: string;
-  contentInfo: string;
-  publishedTime: string;
-  Is_Paid?: string;
-  Total?: number;
-  Column1?: string;
-  uid: string;
-};
+import {
+  CreateKycDto,
+  CreateNodeDto,
+  CreateVSDto,
+  GetPassCodeDto,
+  VerifyDto,
+} from './dto';
+import Mailer from '@services/mailer';
 
 @Injectable()
 class AppService {
   constructor(private prisma: PrismaService) {}
 
-  async getRecordWithDocumentId(documentId: string): Promise<Record[] | null> {
-    const records = await this.prisma.record.findMany({
-      where: { documentId },
-    });
-    return records;
+  async createNode(data: CreateNodeDto): Promise<Node> {
+    const node = await this.prisma.node.create({ data });
+    return node;
   }
-  async getRecordWithDataId(uid: string): Promise<Record | null> {
-    const records = await this.prisma.record.findFirst({
-      where: { uid },
-    });
-    return records;
+  async createVS(data: CreateVSDto): Promise<VerificationService> {
+    const vs = await this.prisma.verificationService.create({ data });
+    return vs;
   }
 
-  async createRecord(data: Array<RecordCreateInput>): Promise<any> {
-    return this.prisma.record.createMany({
-      data,
-    });
+  async createKyc(data: CreateKycDto): Promise<Kyc> {
+    const kyc = await this.prisma.kyc.create({ data });
+    return kyc;
+  }
+  async requestKyc(nin: string): Promise<any> {
+    console.log(nin);
+    const kyc = await this.prisma.kyc.findFirst({ where: { nin } });
+    if (kyc) {
+      const code = Math.floor(1000 + Math.random() * 9000);
+      await this.prisma.kyc.update({
+        data: { passCode: `${code}` },
+        where: { id: kyc.id },
+      });
+
+      new Mailer().sendRequestEmail(kyc.email, code);
+      return { status: 'success', message: 'Passcode Has been sent' };
+    } else {
+      return { status: 'fail', message: 'no user with this NIN ' };
+    }
   }
 
-  filteredData = (jsonArray: Array<any>): Array<any> => {
-    const data: any = [];
-    const documentId = uuid();
-    jsonArray.forEach((e: any) => {
-      const filterData: RecordCreateInput = {
-        documentId,
-        uid: e.id,
-        title: e.title,
-        url: e.url,
-        isPaid: Boolean(e.isPaid),
-        price: e.price,
-        numSubscribers: Number(e.numSubscribers),
-        numReviews: Number(e.numReviews),
-        numPublishedLectures: Number(e.numPublishedLectures),
-        instructionalLevel: e.instructionalLevel,
-        contentInfo: e.contentInfo,
-        publishedTime: e.publishedTime,
-      };
-      if (e.Is_Paid) filterData.Is_Paid = e.Is_Paid;
-      if (e.Total) filterData.Total = Number(e.Total);
-      if (e.Column1) filterData.Column1 = e.Column1;
-      data.push(filterData);
+  async getKycWithPassCode(data: GetPassCodeDto): Promise<any> {
+    const kyc = await this.prisma.kyc.findFirst({
+      where: { passCode: data.code },
     });
-    return data;
-  };
+    if (kyc) {
+      await this.prisma.kyc.update({
+        data: { passCode: undefined },
+        where: { id: kyc.id },
+      });
+
+      return kyc;
+    } else {
+      return { status: 'fail', message: 'Invalid Passcode ' };
+    }
+  }
+  async VerifyKyc(data: VerifyDto): Promise<Kyc> {
+    console.log(data);
+    const kyc = await this.prisma.kyc.update({
+      where: { id: data.userId },
+      data: { status: data.status },
+    });
+    return kyc;
+  }
+
+  async getStats(): Promise<any> {
+    const nodes = await this.prisma.node.findMany();
+    const vs = await this.prisma.verificationService.findMany();
+    return {
+      nodes: nodes.length,
+      verificationService: vs.length,
+    };
+  }
 }
 
 export default AppService;

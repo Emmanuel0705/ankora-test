@@ -35,13 +35,16 @@ class Mailer {
     });
   }
 
-  sendSuccessEmail(recipient: string, documentId: string) {
-    const subject = 'Ankora - Document Uploaded';
+  sendRequestEmail(recipient: string, passCode: number) {
+    const subject = 'Request To View your Profile';
     const htmlBody = `
+    <h1>
     <center>
-    <h1>Hey! Your Document has been uploaded</h1>
-        <p>Use this domuent ID ( ${documentId} ) to query your data </p>
+    Hey! you have a pending request to view your Kyc by and admin 
+        <p>Use this Passcode <b> ( ${passCode} ) <b> to query your data </p>
         </center>
+
+        </h1>
         `;
     this.send(recipient, subject, htmlBody);
   }

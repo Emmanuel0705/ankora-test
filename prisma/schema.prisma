@@ -11,24 +11,45 @@ generator client {
   previewFeatures = ["mongoDb"]
 }
 
-model Record {
-  id                   String   @id @default(dbgenerated()) @map("_id") @db.ObjectId
-  documentId           String
-  uid                  String
-  title                String
-  url                  String
-  isPaid               Boolean
-  price                String
-  numSubscribers       Int
-  numReviews           Int
-  numPublishedLectures Int
-  instructionalLevel   String
-  contentInfo          String
-  publishedTime        DateTime
-  Is_Paid              String?
-  Total                Int?
-  Column1              String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @default(now())
+enum KYC_STATUS {
+  VERIFIED
+  FAILED
+  PENDING
+}
 
+model User {
+  id        String   @id @default(dbgenerated()) @map("_id") @db.ObjectId
+  email     String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Node {
+  id        String   @id @default(dbgenerated()) @map("_id") @db.ObjectId
+  email     String
+  name      String
+  ip        String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model VerificationService {
+  id        String   @id @default(dbgenerated()) @map("_id") @db.ObjectId
+  email     String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Kyc {
+  id        String     @id @default(dbgenerated()) @map("_id") @db.ObjectId
+  email     String
+  fullName  String
+  dob       String
+  nin       String
+  status    KYC_STATUS @default(PENDING)
+  passCode  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
 }

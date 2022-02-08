@@ -1,57 +1,52 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import AppService from '@app/service';
-import { CreateUserDto } from '@app/dto';
-import csv from 'csvtojson';
-import { FileInterceptor } from '@nestjs/platform-express';
-import Mailer from '@services/mailer';
+import {
+  CreateKycDto,
+  CreateNodeDto,
+  CreateVSDto,
+  GetPassCodeDto,
+  VerifyDto,
+} from '@app/dto';
+import { KYC_STATUS } from '@prisma/client';
+// import Mailer from '@services/mailer';
+// new Mailer().sendSuccessEmail(body.email, filterRecord[0].documentId);
 
-@Controller('record')
+@Controller('api')
 class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get(':documentId')
-  async getRecords(@Param() params: { documentId: string }): Promise<any> {
-    return await this.appService.getRecordWithDocumentId(params.documentId);
-  }
-  @Get('data/:uid')
-  async getSingleDocument(@Param() params: { uid: string }): Promise<any> {
-    return await this.appService.getRecordWithDataId(params.uid);
+  @Post('node')
+  async createNode(@Body() body: CreateNodeDto): Promise<any> {
+    return await this.appService.createNode(body);
   }
 
-  @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  async createRecord(
-    @Body() body: CreateUserDto,
-    @UploadedFile() file: Express.Multer.File,
-  ): Promise<any> {
-    try {
-      const jsonArray = await csv().fromString(file.buffer.toString());
-      const filterRecord = this.appService.filteredData(jsonArray);
-      const res = await this.appService.createRecord(filterRecord);
-      if (res) {
-        new Mailer().sendSuccessEmail(body.email, filterRecord[0].documentId);
-        return {
-          status: 'success',
-          documentId: filterRecord[0].documentId,
-          message: `Your Document has been uploaded successfully, pls use document ID ${filterRecord[0].documentId} to query your document data`,
-          total: res.count,
-        };
-      }
-    } catch (error) {
-      console.log(error.message);
-      return {
-        status: 'failed',
-        message: 'Pls upload a valid document',
-      };
-    }
+  @Post('verification-service')
+  async createVS(@Body() body: CreateVSDto): Promise<any> {
+    return await this.appService.createVS(body);
+  }
+
+  @Get('stats')
+  async getStats(): Promise<any> {
+    return await this.appService.getStats();
+  }
+
+  @Get('kyc/:nin')
+  async requestKyc(@Param() params: any): Promise<any> {
+    return await this.appService.requestKyc(params.nin);
+  }
+
+  @Post('consent')
+  async GetUserWithPassCode(@Body() body: GetPassCodeDto): Promise<any> {
+    return await this.appService.getKycWithPassCode(body);
+  }
+
+  @Post('kyc')
+  async CreateKyc(@Body() body: CreateKycDto): Promise<any> {
+    return await this.appService.createKyc(body);
+  }
+  @Put('verify')
+  async UpdateKyc(@Body() body: VerifyDto): Promise<any> {
+    return await this.appService.VerifyKyc(body);
   }
 }
 
