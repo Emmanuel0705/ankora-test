@@ -19,9 +19,18 @@ class AppService {
     const node = await this.prisma.node.create({ data });
     return node;
   }
+
+  async getNodes(): Promise<Node[]> {
+    return await this.prisma.node.findMany();
+  }
+
   async createVS(data: CreateVSDto): Promise<VerificationService> {
     const vs = await this.prisma.verificationService.create({ data });
     return vs;
+  }
+
+  async getVS(): Promise<VerificationService[]> {
+    return await this.prisma.verificationService.findMany();
   }
 
   async createKyc(data: CreateKycDto): Promise<Kyc> {

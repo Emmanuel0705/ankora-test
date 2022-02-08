@@ -7,9 +7,6 @@ import {
   GetPassCodeDto,
   VerifyDto,
 } from '@app/dto';
-import { KYC_STATUS } from '@prisma/client';
-// import Mailer from '@services/mailer';
-// new Mailer().sendSuccessEmail(body.email, filterRecord[0].documentId);
 
 @Controller('api')
 class AppController {
@@ -20,9 +17,19 @@ class AppController {
     return await this.appService.createNode(body);
   }
 
+  @Get('node')
+  async getNodes(): Promise<any> {
+    return await this.appService.getNodes();
+  }
+
   @Post('verification-service')
   async createVS(@Body() body: CreateVSDto): Promise<any> {
     return await this.appService.createVS(body);
+  }
+
+  @Get('verification-service')
+  async getVs(): Promise<any> {
+    return await this.appService.getVS();
   }
 
   @Get('stats')
